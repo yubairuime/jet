@@ -8,6 +8,9 @@ use chrono;
 use std::fs;
 use std::io;
 use std::path;
+use std::path::PathBuf;
+
+use clap::{Parser, Subcommand};
 
 const DEFAULT_ARTICLE_TEMPLATE: &str = "---\n\
      title: \"\"\n\
@@ -17,44 +20,39 @@ const DEFAULT_ARTICLE_TEMPLATE: &str = "---\n\
      description: \"\"\n\
      ---";
 
-pub fn execute_commnads(command: &str, argc: usize, args: Vec<String>) {
-    match command {
-        "build" => {
-            if argc == 2 {
-                build_site("public/".to_string());
-            } else if argc == 4 {
-                let option = args[2].clone();
+#[derive(Parser)]
+#[command(version)]
+pub struct Cli {
+    #[command(subcommand)]
+    command: Command,
+}
 
-                if option == "--output-dir" || option == "-o" {
-                    let output_dir = args[3].clone();
-                    build_site(output_dir);
+#[derive(Subcommand, Debug)]
+enum Command {
+    Build {
+        #[arg[short, long]]
+        output_dir: Option<PathBuf>
+    },
+    Serve,
+    Create {
+        article_slug: String,
+    }
+}
+
+impl Cli {
+    pub fn run(&self) {
+        match &self.command {
+            Command::Build { output_dir } => {
+                if let Some(output_dir) = output_dir {
+                    build_site(output_dir.to_string_lossy().into_owned());
                 } else {
-                    println!("Unknown option: {}", &option);
+                    build_site("public/".to_string());
                 }
-            } else {
-                println!("Wrong number of arguments");
             }
-        }
-        "serve" => {
-            if argc == 2 {
-                serve();
-            } else {
-                println!("Wrong number of arguments");
-            }
-        }
-        "create" => {
-            if argc == 3 {
-                let article_slug = args[2].clone();
-                let _ = create_article(article_slug);
-            } else {
-                println!("Wrong number of arguments");
-            }
-        }
-        _ => {
-            println!(
-                "Error: command error: unknown command \"{}\" for \"jet\"",
-                &command
-            );
+            Command::Serve => { serve(); },
+            Command::Create { article_slug } => {
+                let _ = create_article(article_slug.clone());
+            }    
         }
     }
 }

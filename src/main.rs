@@ -1,4 +1,5 @@
-use std::env;
+use clap::Parser;
+use commands::Cli;
 mod commands;
 mod generate;
 mod server;
@@ -14,15 +15,7 @@ fn main() {
         println!("Error: the current directory is not a Jet project.");
         return;
     } else {
-        let args: Vec<String> = env::args().collect();
-        let argc = args.len();
-
-        if argc >= 2 {
-            let command = &args[1].clone();
-
-            commands::execute_commnads(command.as_str(), argc, args.clone());
-        } else {
-            println!("Wrong number of arguments");
-        }
+        let cli = Cli::parse();
+        cli.run();
     }
 }
