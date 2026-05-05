@@ -1,0 +1,42 @@
+* Jet：靜態網站生成器
+
+** 基本功能
+
+- 建立文章
+- 在本地預覽部落格
+
+** 安裝
+
+```
+git clone https://github.com/yubairuime/jet.git
+cargo install --path .
+```
+
+** 使用
+
+*** 建立新部落格
+
+#+begin_src 
+jet init <部落格名稱>  
+#+end_src
+
+
+*** 新增文章
+
+#+begin_src 
+jet create <文章名稱>  
+#+end_src
+
+
+*** 預覽
+
+#+begin_src 
+jet serve
+#+end_src
+
+*** 生成網站
+
+#+begin_src 
+jet build -o <資料夾>
+#+end_src
+
