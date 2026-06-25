@@ -1,12 +1,13 @@
 use clap::Parser;
-use commands::Cli;
+use commands::CLI;
 mod commands;
 mod generate;
 mod server;
 mod helper;
-mod articles;
+mod article;
 mod rss;
 mod blog;
+mod error;
 
 fn main() {
     let current_directory = String::from("./");
@@ -15,7 +16,7 @@ fn main() {
         println!("Error: the current directory is not a Jet project.");
         return;
     } else {
-        let cli = Cli::parse();
+        let cli = CLI::parse();
         cli.run();
     }
 }

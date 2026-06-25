@@ -6,7 +6,7 @@ use std::fs;
 use std::io;
 use std::path;
 use crate::helper;
-use crate::articles::Articles;
+use crate::article::Articles;
 
 pub type Path = String;
 
@@ -37,14 +37,14 @@ pub fn create_homepage_html_file(articles: Articles, output_dir_path: &Path, is_
     return Ok(());
 }
 
-pub fn create_homepage_html(articles: Articles, homepage_template: String, is_production: bool) -> String {
+pub fn create_homepage_html(articles: Articles, template: String, is_production: bool) -> String {
     let year_archives = create_year_archives(articles, is_production);
     let mut env = Environment::new();
     let mut years: Vec<_> = year_archives.keys().collect();
     years.sort();
     years.reverse();
 
-    let _ = env.add_template("homepage", &homepage_template);
+    let _ = env.add_template("homepage", &template);
 
     let tmpl = env.get_template("homepage").unwrap();
 

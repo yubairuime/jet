@@ -1,7 +1,7 @@
 use rss::{ChannelBuilder, Item, ItemBuilder};
 use chrono::{Utc, TimeZone};
 use crate::blog::Blog;
-use crate::articles::{Article, Articles};
+use crate::article::{Article, Articles};
 use std::fs;
 
 pub fn create_rss_xml(blog: &Blog, output_dir: String) {

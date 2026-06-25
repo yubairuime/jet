@@ -1,8 +1,8 @@
 use serde;
 use toml;
-use crate::helper;
+use crate::{article, helper};
 use crate::generate::{Path};
-use crate::articles::Articles;
+use crate::article::Articles;
 
 pub struct Blog {
     pub config: Config,
@@ -16,16 +16,21 @@ pub struct Config {
     pub description: String,
 }
 
-pub fn read_blog_config(config_filepath: Path) -> Config {
-    let toml_content = helper::read_file_content(config_filepath);
-    let blog: Config = match toml::from_str(toml_content.as_str()) {
-        Ok(blog) => {
-            blog
+impl Blog {
+    pub fn new(config_path: Path, articles_dir: &Path) -> Blog {
+        Blog {
+            config: Blog::read_blog_config(config_path),
+            articles: article::get_articles(articles_dir),
         }
-        Err(_e) => {
-            panic!("jet.toml are incomplete!")
-        }
-    };
+    }
 
-    return blog;
+    fn read_blog_config(path: Path) -> Config {
+        let toml_content = helper::read_file_content(path);
+        let config: Config = match toml::from_str(&toml_content) {
+            Ok(config) => config,
+            Err(_) => panic!("jet.toml are incomplete")
+        };
+
+        config
+    }
 }

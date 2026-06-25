@@ -17,6 +17,40 @@ pub struct Article {
     pub description: String,
 }
 
+impl Article {
+    pub fn from_file(path: Path) -> Article {
+        let content = helper::read_file_content(path);
+        let (frontmatter, body) = markdown_frontmatter::parse::<Frontmatter>(&content).unwrap();
+        let compile_options = markdown::CompileOptions {
+            allow_dangerous_html: true,
+            ..markdown::CompileOptions::default()
+        };
+        let options = markdown::Options {
+            compile: compile_options,
+            ..markdown::Options::gfm()
+        };
+
+        Article {
+            title: frontmatter.title,
+            date: chrono::NaiveDate::parse_from_str(&frontmatter.date, "%Y-%m-%d")
+                .expect("The format of date is incorrect."),
+            content: markdown::to_html_with_options(body, &options).unwrap(),
+            slug: frontmatter.slug,
+            draft: frontmatter.draft,
+            description: frontmatter.description
+        }
+    }
+
+    pub fn to_html(&self, template: &str) -> String {
+        let mut env = Environment::new();
+        env.add_template("article", template).unwrap();
+        let tmpl = env.get_template("article").unwrap();
+
+        tmpl.render(context! { title => self.title, content => self.content, description => self.description })
+            .unwrap()
+    }
+}
+
 pub type Articles = Vec<Article>;
 
 #[derive(serde::Deserialize)]
@@ -28,26 +62,13 @@ struct Frontmatter {
     description: String,
 }
 
-pub fn get_articles(articles_directory: &Path) -> Articles {
-    let mut articles: Articles = vec![];
-    let article_filepaths = get_article_filepaths(&articles_directory).unwrap();
-
-    for article_filepath in article_filepaths {
-        articles.push(read_article_from_file(article_filepath));
-    }
+pub fn get_articles(articles_dir: &Path) -> Articles {
+    let filepaths = get_article_filepaths(&articles_dir).unwrap();
+    let articles: Articles = filepaths.into_iter()
+        .map(|path| Article::from_file(path))
+        .collect();
 
     return articles;
-}
-
-pub fn convert_article_to_html(article_html_template: &str, article: &Article) -> String {
-    let mut env = Environment::new();
-    let _ = env.add_template("article", article_html_template);
-
-    let tmpl = env.get_template("article").unwrap();
-
-    return tmpl
-        .render(context! { title => article.title, content => article.content, description => article.description })
-        .unwrap();
 }
 
 pub fn create_article_html_file(
@@ -64,7 +85,7 @@ pub fn create_article_html_file(
 
     fs::write(
         output_dir_path.to_str().unwrap(),
-        convert_article_to_html(&helper::read_file_content(article_template_path), article),
+        article.to_html(&helper::read_file_content(article_template_path))
     )?;
     return Ok(())
 }
@@ -91,25 +112,3 @@ fn get_article_filepaths(article_directory: &str) -> io::Result<Vec<Path>> {
     return Ok(article_filepaths);
 }
 
-fn read_article_from_file(article_filepath: Path) -> Article {
-    let file_contents = helper::read_file_content(article_filepath);
-    let (frontmatter, body) = markdown_frontmatter::parse::<Frontmatter>(&file_contents).unwrap();
-    let compile_options = markdown::CompileOptions {
-        allow_dangerous_html: true,
-        ..markdown::CompileOptions::default()
-    };
-    let options = markdown::Options {
-        compile: compile_options,
-        ..markdown::Options::gfm()
-    };
-    let article = Article {
-        title: frontmatter.title,
-        date: chrono::NaiveDate::parse_from_str(&frontmatter.date, "%Y-%m-%d")
-            .expect("The format of date is incorrect."),
-        content: markdown::to_html_with_options(body, &options).unwrap(),
-        slug: frontmatter.slug,
-        draft: frontmatter.draft,
-        description: frontmatter.description,
-    };
-    return article;
-}

@@ -1,5 +1,5 @@
 use crate::generate;
-use crate::articles::{get_articles, convert_article_to_html};
+use crate::article::{get_articles, convert_article_to_html};
 use crate::helper;
 use axum::{routing::get, Router, extract::Path, response::Html};
 use tower_http::services::ServeDir;
